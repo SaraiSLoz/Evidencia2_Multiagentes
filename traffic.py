@@ -99,27 +99,27 @@ class Street(Model):
         # Inicializar el tiempo de último cambio
         self.last_color_change_time = time.time()
         self.step_count = 0  # Contador de pasos
-        for px in [18, 20, 22, 24]:
+        for px in np.random.choice(25 + 1, 4, replace=False):
             car = Car(self, "Purple", np.array([px, 3]), np.array(
                 [-1.0, 0.0]), random.uniform(1, 2))
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
          # First horizontal line (moving left)
-        for px in [18, 20, 22, 24]:
+        for px in np.random.choice(25 + 1, 4, replace=False):
             car = Car(self, "Purple", np.array(
                 [px, 3.5]), np.array([-1.0, 0.0]), random.uniform(1, 2))
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
         # Second horizontal line (moving right)
-        for px in [6, 8, 10, 12]:
+        for px in np.random.choice(25 + 1, 4, replace=False):
             car = Car(self, "Blue", np.array([px, 6]), np.array(
                 [1.0, 0.0]), random.uniform(1, 2))  # Change to move right
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
-        for px in [6, 8, 10, 12]:
+        for px in np.random.choice(25 + 1, 4, replace=False):
             car = Car(self, "Blue", np.array([px, 5.5]), np.array(
                 [1.0, 0.0]), random.uniform(1, 2))  # Change to move right
             self.space.place_agent(car, car.pos)
@@ -174,9 +174,20 @@ class Street(Model):
                 self.last_color_change_steps[i] = self.step_count
         cont = 0
 
+        if self.step_count % 5 == 0:
+            agents_to_remove = [agent for agent in self.schedule.agents if
+                                (agent.pos[0] == 0.1 and agent.pos[1] == 6) or
+                                (agent.pos[0] == 24.9 and agent.pos[1] == 6) or
+                                (agent.pos[0] == 0.1 and agent.pos[1] == 3.5) or
+                                (agent.pos[0] == 24 and agent.pos[1] == 3.5)]
+
+            for agent in agents_to_remove:
+                self.space.remove_agent(agent)
+                self.schedule.remove(agent)
+
         if self.step_count % 10 == 0:
             orange_agent = Car(self, "Orange", np.array(
-                [15, -1]), np.array([0.0, -1.0]), random.randint(1, 2))
+                [15, -0.5]), np.array([0.0, -1.0]), random.randint(1, 2))
             self.space.place_agent(orange_agent, orange_agent.pos)
             self.schedule.add(orange_agent)
 
@@ -254,7 +265,7 @@ class Street(Model):
                         agent.color = "Blue"
                 else:
                     if agent.pos[0] == 15 and agent.pos[1] == 3.5:  # Verificar la posición
-                        # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                     # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
                         agent.speed = np.array([-2.0, 0.0])
                         agent.color = "Purple"
                     elif agent.pos[0] == 15 and agent.speed[1] == 1.0:

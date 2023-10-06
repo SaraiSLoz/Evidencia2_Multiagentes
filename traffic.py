@@ -1,5 +1,5 @@
 import numpy as np
-
+import random
 from mesa import Agent, Model
 from mesa.space import ContinuousSpace
 from mesa.time import RandomActivation
@@ -10,11 +10,12 @@ from SimpleContinuousModule import SimpleCanvas
 
 
 class Car(Agent):
-    def __init__(self, model: Model, color, pos, speed):
+    def __init__(self, model: Model, color, pos, speed,decision):
         super().__init__(model.next_id(), model)  # Asigna un ID único automáticamente
         self.color = color
         self.pos = pos
         self.speed = speed
+        self.decision = decision
 
     def step(self):
         new_pos = self.pos + \
@@ -99,27 +100,27 @@ class Street(Model):
         self.last_color_change_time = time.time()
         self.step_count = 0  # Contador de pasos
         for px in [18, 20, 22, 24]:
-            car = Car(self, "Purple", np.array([px, 3]), np.array([-1.0, 0.0]))
+            car = Car(self, "Purple", np.array([px, 3]), np.array([-1.0, 0.0]),random.uniform(1,2))
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
          # First horizontal line (moving left)
         for px in [18, 20, 22, 24]:
             car = Car(self, "Purple", np.array(
-                [px, 3.5]), np.array([-1.0, 0.0]))
+                [px, 3.5]), np.array([-1.0, 0.0]), random.uniform(1,2))
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
         # Second horizontal line (moving right)
         for px in [6, 8, 10, 12]:
             car = Car(self, "Blue", np.array([px, 6]), np.array(
-                [1.0, 0.0]))  # Change to move right
+                [1.0, 0.0]),random.uniform(1,2))  # Change to move right
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
         for px in [6, 8, 10, 12]:
             car = Car(self, "Blue", np.array([px, 5.5]), np.array(
-                [1.0, 0.0]))  # Change to move right
+                [1.0, 0.0]),random.uniform(1,2))  # Change to move right
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
@@ -127,7 +128,7 @@ class Street(Model):
         for py in [-1, -1.5, -2, -2.5]:
             if py < 6:  # Move upwards
                 car = Car(self, "Orange", np.array(
-                    [15, py]), np.array([0.0, -1.0]))
+                    [15, py]), np.array([0.0, -1.0]),random.randint(1,2))
                 self.space.place_agent(car, car.pos)
                 self.schedule.add(car)
         self.circles = [
@@ -144,8 +145,8 @@ class Street(Model):
         self.circles[2].color = "Red"
 
         self.last_color_change_steps = [0] * len(self.circles)
-        self.color_change_steps = [[6, 2, 8], [6, 2, 8], [
-            6, 2, 8]]  # Change intervals for each circle
+        self.color_change_steps = [[24, 8, 32], [24, 8, 32], [
+            24, 8, 32]]  # Change intervals for each circle
 
         for circle in self.circles:
             self.space.place_agent(circle, (circle.x, circle.y))
@@ -170,10 +171,9 @@ class Street(Model):
             if steps_passed >= current_interval:
                 circle.change_color()
                 self.last_color_change_steps[i] = self.step_count
+        cont = 0
         for agent in self.schedule.agents:
-            #if agent.pos[1] <= 3:
-                #agent.update("Purple")
-            #else:
+            
                 if agent.color == "Purple":  
                     purple_agents = [other_agent for other_agent in self.schedule.agents if
                                    other_agent.color == "Purple" and other_agent != agent]
@@ -235,16 +235,48 @@ class Street(Model):
                         else:
                             agent.speed = np.array([1.0, 0.0])
                 elif agent.color == "Orange":  # Solo para agentes naranjas
-                    if agent.pos[0] == 15:  # Solo para la línea vertical
-                        # Coordinar velocidad según el estado del semáforo
-                        if semaforo3 == "Red":
-                            agent.speed = np.array([0.0, 0.0])  # Detenerse
-                        elif semaforo3 == "Green":
-                            # Velocidad normal (se mueven hacia abajo)
-                            agent.speed = np.array([0.0, -1.0])
-                        elif semaforo3 == "Yellow":
-                            # Disminuir velocidad
-                            agent.speed = np.array([0.0, -0.5])
+                    if agent.decision == 1:
+                        if agent.pos[0] == 15 and agent.pos[1] == 6:  # Verificar la posición
+                            # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                            agent.speed = np.array([2.0, 0.0])
+                            agent.color = "Blue"
+                        elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                            # Cambiar la dirección a moverse hacia la derecha
+                            agent.speed = np.array([1.0, 0.0])
+                            agent.color = "Blue"
+                    else:
+                         if agent.pos[0] == 15 and agent.pos[1] == 3.5:  # Verificar la posición
+                            # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                            agent.speed = np.array([-2.0, 0.0])
+                            agent.color = "Purple"
+                         elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                            # Cambiar la dirección a moverse hacia la derecha
+                            agent.speed = np.array([-1.0, 0.0])
+                            agent.color = "Purple"
+                
+                    # if agent.decision == 1:
+                    #      agent.pos[1] = 6
+                    #      agent.pos[0] = 15 + cont
+                    #      agent.speed = np.array([1.0, 0.0])
+                    #      cont += 2                     
+                    #      agent.step()
+                # elif agent.color == "Orange":  # Solo para agentes naranjas
+                #   if agent.pos[0] == 15 and agent.pos[1] == 6:  # Verificar la posición
+                #     # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                #       agent.speed = np.array([1.0, 0.0])
+                #   elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                #     # Cambiar la dirección a moverse hacia la derecha
+                #       agent.speed = np.array([1.0, 0.0])
+                    # else:      
+                    #     if semaforo3 == "Red":
+                    #         agent.speed = np.array([0.0, 0.0])  # Detenerse
+                    #     elif semaforo3 == "Green":
+                    #             # Velocidad normal (se mueven hacia abajo)
+                    #         agent.speed = np.array([0.0, -1.0])
+                    #     elif semaforo3 == "Yellow":
+                    #             # Disminuir velocidad
+                    #         agent.speed = np.array([0.0, -0.5])
+
                 agent.step()
 
 
@@ -262,5 +294,5 @@ def setup_model():
 
 
 server.setup_model = setup_model
-server.port = 5100
+server.port = 5000
 server.launch()

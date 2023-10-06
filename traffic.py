@@ -97,15 +97,28 @@ class Street(Model):
         self.schedule = RandomActivation(self)
         # Inicializar el tiempo de último cambio
         self.last_color_change_time = time.time()
-        # First horizontal line (moving left)
+        self.step_count = 0  # Contador de pasos
         for px in [18, 20, 22, 24]:
             car = Car(self, "Purple", np.array([px, 3]), np.array([-1.0, 0.0]))
+            self.space.place_agent(car, car.pos)
+            self.schedule.add(car)
+
+         # First horizontal line (moving left)
+        for px in [18, 20, 22, 24]:
+            car = Car(self, "Purple", np.array(
+                [px, 3.5]), np.array([-1.0, 0.0]))
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
 
         # Second horizontal line (moving right)
         for px in [6, 8, 10, 12]:
             car = Car(self, "Blue", np.array([px, 6]), np.array(
+                [1.0, 0.0]))  # Change to move right
+            self.space.place_agent(car, car.pos)
+            self.schedule.add(car)
+
+        for px in [6, 8, 10, 12]:
+            car = Car(self, "Blue", np.array([px, 5.5]), np.array(
                 [1.0, 0.0]))  # Change to move right
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
@@ -117,7 +130,6 @@ class Street(Model):
                     [15, py]), np.array([0.0, -1.0]))
                 self.space.place_agent(car, car.pos)
                 self.schedule.add(car)
-
         self.circles = [
             # primercirculo
             Circle(self.next_id(), self, 15.8, 2.6, 4),
@@ -131,57 +143,66 @@ class Street(Model):
         self.circles[1].color = "Green"
         self.circles[2].color = "Red"
 
-        # Inicializar los tiempos de último cambio para cada círculo
-        self.last_color_change_times = [time.time()] * len(self.circles)
-
-        # Inicializar los intervalos de cambio de color para cada círculo
-        # Tiempos en segundos: Verde: 6s, Amarillo: 2s, Rojo: 8s
-        self.color_change_intervals = [[6, 2, 8], [
-            6, 2, 8], [6, 2, 8]]  # Para cada círculo
+        self.last_color_change_steps = [0] * len(self.circles)
+        self.color_change_steps = [[6, 2, 8], [6, 2, 8], [
+            6, 2, 8]]  # Change intervals for each circle
 
         for circle in self.circles:
             self.space.place_agent(circle, (circle.x, circle.y))
 
     def step(self):
-        current_time = time.time()
-
-        semaforo1 = self.circles[0].color  # Cambiado a segundo círculo
-        semaforo2 = self.circles[1].color  # Cambiado a segundo círculo
-        semaforo3 = self.circles[2].color  # Cambiado a segundo círculo
+        self.step_count += 1  # Increment step count in each iteration
+        semaforo1 = self.circles[0].color
+        semaforo2 = self.circles[1].color
+        semaforo3 = self.circles[2].color
 
         for i, circle in enumerate(self.circles):
-            # Obtener el patrón de colores para este círculo
-            color_pattern = self.color_change_intervals[i]
-            color_index = 0  # Inicializar el índice del color actual
+            color_pattern = self.color_change_steps[i]
+            color_index = 0
 
-            # Determinar el índice del color actual
             if circle.get_circle_portrayal()["Color"] == "Yellow":
                 color_index = 1
             elif circle.get_circle_portrayal()["Color"] == "Red":
                 color_index = 2
 
-            time_passed = current_time - self.last_color_change_times[i]
-            # Obtener el intervalo actual según el color actual
+            steps_passed = self.step_count - self.last_color_change_steps[i]
             current_interval = color_pattern[color_index]
-            if time_passed >= current_interval:
+            if steps_passed >= current_interval:
                 circle.change_color()
-                self.last_color_change_times[i] = current_time
-
+                self.last_color_change_steps[i] = self.step_count
         for agent in self.schedule.agents:
-            if agent.pos[1] <= 3:
-                agent.update("Purple")
-            else:
-                if agent.color == "Purple":  # Solo para agentes naranjas
-                    if agent.pos[0] == 16:  # Solo para la línea vertical
-                        # Coordinar velocidad según el estado del semáforo
-                        if semaforo1 == "Red":
-                            agent.speed = np.array([0.0, 0.0])  # Detenerse
-                        elif semaforo1 == "Green":
-                            # Velocidad normal (se mueven hacia abajo)
+            #if agent.pos[1] <= 3:
+                #agent.update("Purple")
+            #else:
+                if agent.color == "Purple":  
+                    purple_agents = [other_agent for other_agent in self.schedule.agents if
+                                   other_agent.color == "Purple" and other_agent != agent]
+
+                    # Coordenadas relevantes
+                    current_position = agent.pos[0]
+                    coordinateslow = 18.5
+                    coordinatestop = 16.5
+
+                    # Distancia a la que se desea mantener
+                    desired_distance = 1.5  
+
+                    # Calcular la velocidad en función de la distancia al agente de adelante
+                    if current_position == coordinatestop and semaforo1 == "Red":
+                        # Detenerse en la coordenada  con semáforo en rojo
+                        agent.speed = np.array([0.0, 0.0])
+                    elif current_position == coordinateslow and semaforo1 == "Yellow":
+                        # Disminuir velocidad en la coordenada  con semáforo en amarillo
+                        agent.speed = np.array([-0.5, 0.0])
+                    else:
+                        # Calcular la velocidad para mantener la distancia
+                        for purple_agent in purple_agents:
+                            if purple_agent.pos[0] < current_position:
+                                distance = current_position - purple_agent.pos[0]
+                                if distance < desired_distance:
+                                    agent.speed = np.array([0.0, 0.0])
+                                    break
+                        else:
                             agent.speed = np.array([-1.0, 0.0])
-                        elif semaforo1 == "Yellow":
-                            # Disminuir velocidad
-                            agent.speed = np.array([-0.5, 0.0])
 
                 elif agent.color == "Blue":
                     # Obtener todos los agentes azules
@@ -194,7 +215,7 @@ class Street(Model):
                     coordinate_12_5 = 12.5
 
                     # Distancia a la que se desea mantener
-                    desired_distance = 1.5  # Ajusta según tu necesidad
+                    desired_distance = 1.5 
 
                     # Calcular la velocidad en función de la distancia al agente de adelante
                     if current_position == coordinate_12_5 and semaforo2 == "Red":
@@ -232,5 +253,14 @@ canvas = SimpleCanvas(car_draw, 500, 500)
 model_params = {}
 
 server = ModularServer(Street, [canvas], "Traffic", model_params)
+
+
+def setup_model():
+    model = Street()
+    model.step_count = 0  # Reset step count
+    return model
+
+
+server.setup_model = setup_model
 server.port = 5100
 server.launch()

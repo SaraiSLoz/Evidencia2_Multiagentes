@@ -16,6 +16,7 @@ class Car(Agent):
         self.pos = pos
         self.speed = speed
         self.decision = decision
+        self.counter = 0
 
     def step(self):
         new_pos = self.pos + \
@@ -254,24 +255,60 @@ class Street(Model):
                     else:
                         agent.speed = np.array([1.0, 0.0])
             elif agent.color == "Orange":  # Solo para agentes naranjas
-                if agent.decision == 1:
-                    if agent.pos[0] == 15 and agent.pos[1] == 6:  # Verificar la posición
-                        # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
-                        agent.speed = np.array([2.0, 0.0])
-                        agent.color = "Blue"
-                    elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
-                        # Cambiar la dirección a moverse hacia la derecha
-                        agent.speed = np.array([1.0, 0.0])
-                        agent.color = "Blue"
+                # Obtener todos los agentes azules
+                orange_agents = [other_agent for other_agent in self.schedule.agents if
+                                 other_agent.color == "Orange" and other_agent != agent]
+
+                # Coordenadas relevantes
+                current_position = agent.pos[1]
+                coordinate_7_5 = 7.5
+                coordinate_7_2 = 7.2
+
+                desired_distance = 1
+
+                # Calcular la velocidad en función de la distancia al agente de adelante
+                if current_position == coordinate_7_5 and semaforo3 == "Red":
+                    # Detenerse en la coordenada 12.5 con semáforo en rojo
+                    agent.speed = np.array([0.0, 0.0])
+                elif current_position == coordinate_7_2 and semaforo3 == "Yellow":
+                    # Disminuir velocidad en la coordenada 7.5 con semáforo en amarillo
+                    agent.speed = np.array([0.0, -0.5])
                 else:
-                    if agent.pos[0] == 15 and agent.pos[1] == 3.5:  # Verificar la posición
-                     # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
-                        agent.speed = np.array([-2.0, 0.0])
-                        agent.color = "Purple"
-                    elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
-                        # Cambiar la dirección a moverse hacia la derecha
-                        agent.speed = np.array([-1.0, 0.0])
-                        agent.color = "Purple"
+                    # Calcular la velocidad para mantener la distancia
+                    for orange_agent in orange_agents:
+                        if orange_agent.pos[1] < current_position:
+                            distance = current_position - orange_agent.pos[1]
+                            if distance < desired_distance:
+                                agent.speed = np.array([0.0, 0.0])
+                                break
+                    else:
+                        if agent.counter < 3:
+                            # Incrementar el contador, pero no moverse
+                            agent.counter += 1
+                        else:
+                            agent.counter = 0
+                            agent.speed = np.array([0.0, -1.0])
+
+                            if agent.decision == 1:
+                                # Verificar la posición
+                                if agent.pos[0] == 15 and agent.pos[1] == 6:
+                                    # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                                    agent.speed = np.array([2.0, 0.0])
+                                    agent.color = "Blue"
+                                elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                                    # Cambiar la dirección a moverse hacia la derecha
+                                    agent.speed = np.array([1.0, 0.0])
+                                    agent.color = "Blue"
+                            else:
+                                # Verificar la posición
+                                if agent.pos[0] == 15 and agent.pos[1] == 3.5:
+                                    # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                                    agent.speed = np.array([-2.0, 0.0])
+                                    agent.color = "Purple"
+                                elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                                    # Cambiar la dirección a moverse hacia la derecha
+                                    agent.speed = np.array([-1.0, 0.0])
+                                    agent.color="Purple"
 
             agent.step()
 

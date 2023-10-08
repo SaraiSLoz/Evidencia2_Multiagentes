@@ -270,6 +270,7 @@ class Street(Model):
                 if current_position == coordinate_7_5 and semaforo3 == "Red":
                     # Detenerse en la coordenada 12.5 con semáforo en rojo
                     agent.speed = np.array([0.0, 0.0])
+                    agent.counter = 0
                 elif current_position == coordinate_7_2 and semaforo3 == "Yellow":
                     # Disminuir velocidad en la coordenada 7.5 con semáforo en amarillo
                     agent.speed = np.array([0.0, -0.5])
@@ -286,9 +287,9 @@ class Street(Model):
                             # Incrementar el contador, pero no moverse
                             agent.counter += 1
                         else:
-                            agent.counter = 0
+                            
                             agent.speed = np.array([0.0, -1.0])
-
+                            
                             if agent.decision == 1:
                                 # Verificar la posición
                                 if agent.pos[0] == 15 and agent.pos[1] == 6:

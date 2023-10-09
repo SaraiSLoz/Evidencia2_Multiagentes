@@ -104,6 +104,19 @@ def maintain_distance_x2(agent, purple_agents, desired_distance_x, current_posit
         agent.speed = np.array([-1.0, 0.0])
 
 
+# def maintain_distance_orange(agent, other_agents, desired_distance, current_position_y):
+#     for other_agent in other_agents:
+#         if other_agent.color not in ["Orange"]:
+#             distance_y = abs(other_agent.pos[1] - current_position_y)
+#             if distance_y < desired_distance:
+#                 # Detenerse
+#                 agent.speed = np.array([0.0, 0.0])
+#                 break
+#     else:
+#         # Avanzar
+#         agent.speed = np.array([0.0, -1.0])
+
+
 class Street(Model):
     def __init__(self):
         super().__init__()
@@ -151,7 +164,7 @@ class Street(Model):
             # primercirculo
             Circle(self.next_id(), self, 15.8, 2.6, 4),
             # segundocirculo
-            Circle(self.next_id(), self, 13.6, 6.5, 4),
+            Circle(self.next_id(), self, 13.2, 6.5, 4),
             # tercercirculo
             Circle(self.next_id(), self, 16.5, 7, 4)
         ]
@@ -233,7 +246,7 @@ class Street(Model):
                     agent.speed = np.array([-0.5, 0.0])
 
                 else:
-                    if agent.counter < 4:
+                    if agent.counter < 8:
                         # Incrementar el contador, pero no moverse
                         agent.counter += 1
                     else:
@@ -253,7 +266,7 @@ class Street(Model):
                                 other_agent.color == "Black" and other_agent != agent]
 
                 current_position = agent.pos[0]
-                coordinate_7_5 = 7.5
+                coordinate_7_5 = 9.5
                 coordinate_12_5 = 12.5
                 desired_distance = 1.5
 
@@ -263,6 +276,16 @@ class Street(Model):
 
                 elif current_position == coordinate_7_5 and semaforo2 == "Yellow":
                     agent.speed = np.array([0.5, 0.0])
+
+                # elif current_position > 12.8:
+                #     # Double the speed for 10 steps
+                #     if agent.counter < 6:
+                #         agent.speed = np.array([1.5 * agent.speed[0], agent.speed[1]])
+                #         agent.counter += 1
+                #     else:
+                #         # Reset the counter and revert speed back to the original speed
+                #         agent.counter = 0
+                #         agent.speed = np.array([1.0, 0.0])  # Adjust the original speed as needed
 
                 else:
                     if agent.counter < 4:
@@ -311,6 +334,8 @@ class Street(Model):
                             # Incrementar el contador, pero no moverse
                             agent.counter += 1
                         else:
+                            # maintain_distance_orange(
+                            #     agent, self.schedule.agents, desired_distance, current_position)
                             agent.speed = np.array([0.0, -1.0])
                             if agent.decision == 1:
                                 # Verificar la posición
@@ -373,5 +398,5 @@ def setup_model():
 
 
 server.setup_model = setup_model
-server.port = 5101
+server.port = 5100
 server.launch()

@@ -9,6 +9,17 @@ import time
 from SimpleContinuousModule import SimpleCanvas
 
 
+class Street(Agent):
+    def __init__(self, model: Model, pos, type, color):
+        super().__init__(model.next_id(), model)
+        self.pos = pos
+        self.type = type
+        self.color = color
+        
+    def step(self):
+        pass
+
+
 class Car(Agent):
     def __init__(self, model: Model, color, pos, speed, decision):
         super().__init__(model.next_id(), model)  # Asigna un ID único automáticamente
@@ -57,6 +68,7 @@ def car_draw(agent):
     color = agent.color
     w = 0.034
     h = 0.02
+
     if color == "Blue":
         w = 0.034
         h = 0.02
@@ -75,7 +87,14 @@ def car_draw(agent):
     elif color == "Orange":
         w = 0.02
         h = 0.034
-    return {"Shape": "rect", "w": w, "h": h, "Filled": "true", "Color": color}
+        
+    if isinstance(agent,Car):
+        return {"Shape": "rect", "w": w, "h": h, "Filled": "true", "Color": color}
+    elif isinstance(agent,Street):
+        if agent.type == "Horizontal":
+            return {"Shape": "rect", "w": 1, "h": 0.1, "Filled": "true", "Color": agent.color}
+        else:
+            return {"Shape": "rect", "w": 0.065, "h": 1, "Filled": "true", "Color": agent.color}
 
 
 blue1 = []
@@ -117,11 +136,27 @@ def maintain_distance_x2(agent, purple_agents, desired_distance_x, current_posit
 #         agent.speed = np.array([0.0, -1.0])
 
 
-class Street(Model):
+class Ambience(Model):
     def __init__(self):
         super().__init__()
         self.space = ContinuousSpace(25, 10, True)
         self.schedule = RandomActivation(self)
+        
+        
+        #Texturas calles
+        street = Street(self, np.array([12.5, 13.25]), "Horizontal", "Green")
+        self.space.place_agent(street, street.pos)
+        self.schedule.add(street)
+        
+        #Texturas calles
+        street = Street(self, np.array([12.5, 15.75]), "Horizontal", "Green")
+        self.space.place_agent(street, street.pos)
+        self.schedule.add(street)
+    
+        street = Street(self, np.array([15.0, -2.25]), "Vertical", "Green")
+        self.space.place_agent(street, street.pos)
+        self.schedule.add(street)
+        
         # Inicializar el tiempo de último cambio
         self.last_color_change_time = time.time()
         self.step_count = 0  # Contador de pasos
@@ -223,163 +258,165 @@ class Street(Model):
             self.schedule.add(orange_agent)
 
         for agent in self.schedule.agents:
+            
+            if isinstance(agent,Car):
 
-            if agent.color == "Purple" or agent.color == "Gray":
-                purple_agents = [other_agent for other_agent in self.schedule.agents if
-                                 other_agent.color == "Purple" and other_agent != agent]
+                if agent.color == "Purple" or agent.color == "Gray":
+                    purple_agents = [other_agent for other_agent in self.schedule.agents if
+                                    other_agent.color == "Purple" and other_agent != agent]
 
-                gray_agents2 = [other_agent for other_agent in self.schedule.agents if
-                                other_agent.color == "Gray" and other_agent != agent]
-                # Coordenadas relevantes
-                current_position = agent.pos[0]
-                coordinateslow = 18.5
-                coordinatestop = 16.5
-                # Distancia a la que se desea mantener
-                desired_distance = 1.5
-                # Calcular la velocidad en función de la distancia al agente de adelante
-                if current_position == coordinatestop and semaforo1 == "Red":
-                    # Detenerse en la coordenada  con semáforo en rojo
-                    agent.speed = np.array([0.0, 0.0])
-                    agent.counter = 0
-                elif current_position == coordinateslow and semaforo1 == "Yellow":
-                    # Disminuir velocidad en la coordenada  con semáforo en amarillo
-                    agent.speed = np.array([-0.5, 0.0])
-
-                else:
-                    if agent.counter < 8:
-                        # Incrementar el contador, pero no moverse
-                        agent.counter += 1
-                    else:
-                        if(agent.color == "Purple"):
-                            maintain_distance_x2(
-                                agent, purple_agents, desired_distance, current_position)
-                        else:
-                            maintain_distance_x2(
-                                agent, gray_agents2, desired_distance, current_position)
-
-            elif agent.color == "Blue" or agent.color == "Black":
-                # Obtener todos los agentes azules
-                blue_agents = [other_agent for other_agent in self.schedule.agents if
-                               other_agent.color == "Blue" and other_agent != agent]
-
-                blue_agents2 = [other_agent for other_agent in self.schedule.agents if
-                                other_agent.color == "Black" and other_agent != agent]
-
-                current_position = agent.pos[0]
-                coordinate_7_5 = 9.5
-                coordinate_12_5 = 12.5
-                desired_distance = 1.5
-
-                if current_position == coordinate_12_5 and semaforo2 == "Red":
-                    agent.speed = np.array([0.0, 0.0])
-                    agent.counter = 0
-
-                elif current_position == coordinate_7_5 and semaforo2 == "Yellow":
-                    agent.speed = np.array([0.5, 0.0])
-
-                # elif current_position > 12.8:
-                #     # Double the speed for 10 steps
-                #     if agent.counter < 6:
-                #         agent.speed = np.array([1.5 * agent.speed[0], agent.speed[1]])
-                #         agent.counter += 1
-                #     else:
-                #         # Reset the counter and revert speed back to the original speed
-                #         agent.counter = 0
-                #         agent.speed = np.array([1.0, 0.0])  # Adjust the original speed as needed
-
-                else:
-                    if agent.counter < 4:
-                        # Incrementar el contador, pero no moverse
-                        agent.counter += 1
+                    gray_agents2 = [other_agent for other_agent in self.schedule.agents if
+                                    other_agent.color == "Gray" and other_agent != agent]
+                    # Coordenadas relevantes
+                    current_position = agent.pos[0]
+                    coordinateslow = 18.5
+                    coordinatestop = 16.5
+                    # Distancia a la que se desea mantener
+                    desired_distance = 1.5
+                    # Calcular la velocidad en función de la distancia al agente de adelante
+                    if current_position == coordinatestop and semaforo1 == "Red":
+                        # Detenerse en la coordenada  con semáforo en rojo
+                        agent.speed = np.array([0.0, 0.0])
+                        agent.counter = 0
+                    elif current_position == coordinateslow and semaforo1 == "Yellow":
+                        # Disminuir velocidad en la coordenada  con semáforo en amarillo
+                        agent.speed = np.array([-0.5, 0.0])
 
                     else:
-                        # Calcular la velocidad para mantener la distancia
-                        if(agent.color == "Blue"):
-                            maintain_distance_x(
-                                agent, blue_agents, desired_distance, current_position)
-                        else:
-                            maintain_distance_x(
-                                agent, blue_agents2, desired_distance, current_position)
-
-            elif agent.color == "Orange":
-                orange_agents = [other_agent for other_agent in self.schedule.agents if
-                                 other_agent.color == "Orange" and other_agent != agent]
-
-                # Coordenadas relevantes
-                current_position = agent.pos[1]
-                coordinate_7_5 = 7.5
-                coordinate_7_2 = 7.2
-
-                desired_distance = 1
-
-                # Calcular la velocidad en función de la distancia al agente de adelante
-                if current_position == coordinate_7_5 and semaforo3 == "Red":
-                    # Detenerse en la coordenada 12.5 con semáforo en rojo
-                    agent.speed = np.array([0.0, 0.0])
-                    agent.counter = 0
-                elif current_position == coordinate_7_2 and semaforo3 == "Yellow":
-                    # Disminuir velocidad en la coordenada 7.5 con semáforo en amarillo
-                    agent.speed = np.array([0.0, -0.5])
-                else:
-                    # Calcular la velocidad para mantener la distancia
-                    for orange_agent in orange_agents:
-                        if orange_agent.pos[1] < current_position:
-                            distance = current_position - orange_agent.pos[1]
-                            if distance < desired_distance:
-                                agent.speed = np.array([0.0, 0.0])
-                                break
-                    else:
-
-                        if agent.counter < 3:
+                        if agent.counter < 8:
                             # Incrementar el contador, pero no moverse
                             agent.counter += 1
                         else:
-                            # maintain_distance_orange(
-                            #     agent, self.schedule.agents, desired_distance, current_position)
-                            agent.speed = np.array([0.0, -1.0])
-                            if agent.decision == 1:
-                                # Verificar la posición
-                                if agent.pos[0] == 15 and agent.pos[1] == 6:
-                                    # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
-                                    agent.speed = np.array([2.0, 0.0])
-                                    agent.color = "Blue"
-                                elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
-                                    # Cambiar la dirección a moverse hacia la derecha
-                                    agent.speed = np.array([1.0, 0.0])
-                                    agent.color = "Blue"
-
-                            elif agent.decision == 2:
-                                # Verificar la posición
-                                if agent.pos[0] == 15 and agent.pos[1] == 5.5:
-                                    # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
-                                    agent.speed = np.array([2.0, 0.0])
-                                    agent.color = "Black"
-                                elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
-                                    # Cambiar la dirección a moverse hacia la derecha
-                                    agent.speed = np.array([1.0, 0.0])
-                                    agent.color = "Black"
-
-                            elif agent.decision == 3:
-                                # Verificar la posición
-                                if agent.pos[0] == 15 and agent.pos[1] == 3.5:
-                                    # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
-                                    agent.speed = np.array([-2.0, 0.0])
-                                    agent.color = "Gray"
-                                elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
-                                    # Cambiar la dirección a moverse hacia la derecha
-                                    agent.speed = np.array([-1.0, 0.0])
-                                    agent.color = "Gray"
-
+                            if(agent.color == "Purple"):
+                                maintain_distance_x2(
+                                    agent, purple_agents, desired_distance, current_position)
                             else:
-                                # Verificar la posición
-                                if agent.pos[0] == 15 and agent.pos[1] == 3:
-                                    # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
-                                    agent.speed = np.array([-2.0, 0.0])
-                                    agent.color = "Purple"
-                                elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
-                                    # Cambiar la dirección a moverse hacia la derecha
-                                    agent.speed = np.array([-1.0, 0.0])
-                                    agent.color = "Purple"
+                                maintain_distance_x2(
+                                    agent, gray_agents2, desired_distance, current_position)
+
+                elif agent.color == "Blue" or agent.color == "Black":
+                    # Obtener todos los agentes azules
+                    blue_agents = [other_agent for other_agent in self.schedule.agents if
+                                other_agent.color == "Blue" and other_agent != agent]
+
+                    blue_agents2 = [other_agent for other_agent in self.schedule.agents if
+                                    other_agent.color == "Black" and other_agent != agent]
+
+                    current_position = agent.pos[0]
+                    coordinate_7_5 = 9.5
+                    coordinate_12_5 = 12.5
+                    desired_distance = 1.5
+
+                    if current_position == coordinate_12_5 and semaforo2 == "Red":
+                        agent.speed = np.array([0.0, 0.0])
+                        agent.counter = 0
+
+                    elif current_position == coordinate_7_5 and semaforo2 == "Yellow":
+                        agent.speed = np.array([0.5, 0.0])
+
+                    # elif current_position > 12.8:
+                    #     # Double the speed for 10 steps
+                    #     if agent.counter < 6:
+                    #         agent.speed = np.array([1.5 * agent.speed[0], agent.speed[1]])
+                    #         agent.counter += 1
+                    #     else:
+                    #         # Reset the counter and revert speed back to the original speed
+                    #         agent.counter = 0
+                    #         agent.speed = np.array([1.0, 0.0])  # Adjust the original speed as needed
+
+                    else:
+                        if agent.counter < 4:
+                            # Incrementar el contador, pero no moverse
+                            agent.counter += 1
+
+                        else:
+                            # Calcular la velocidad para mantener la distancia
+                            if(agent.color == "Blue"):
+                                maintain_distance_x(
+                                    agent, blue_agents, desired_distance, current_position)
+                            else:
+                                maintain_distance_x(
+                                    agent, blue_agents2, desired_distance, current_position)
+
+                elif agent.color == "Orange":
+                    orange_agents = [other_agent for other_agent in self.schedule.agents if
+                                    other_agent.color == "Orange" and other_agent != agent]
+
+                    # Coordenadas relevantes
+                    current_position = agent.pos[1]
+                    coordinate_7_5 = 7.5
+                    coordinate_7_2 = 7.2
+
+                    desired_distance = 1
+
+                    # Calcular la velocidad en función de la distancia al agente de adelante
+                    if current_position == coordinate_7_5 and semaforo3 == "Red":
+                        # Detenerse en la coordenada 12.5 con semáforo en rojo
+                        agent.speed = np.array([0.0, 0.0])
+                        agent.counter = 0
+                    elif current_position == coordinate_7_2 and semaforo3 == "Yellow":
+                        # Disminuir velocidad en la coordenada 7.5 con semáforo en amarillo
+                        agent.speed = np.array([0.0, -0.5])
+                    else:
+                        # Calcular la velocidad para mantener la distancia
+                        for orange_agent in orange_agents:
+                            if orange_agent.pos[1] < current_position:
+                                distance = current_position - orange_agent.pos[1]
+                                if distance < desired_distance:
+                                    agent.speed = np.array([0.0, 0.0])
+                                    break
+                        else:
+
+                            if agent.counter < 3:
+                                # Incrementar el contador, pero no moverse
+                                agent.counter += 1
+                            else:
+                                # maintain_distance_orange(
+                                #     agent, self.schedule.agents, desired_distance, current_position)
+                                agent.speed = np.array([0.0, -1.0])
+                                if agent.decision == 1:
+                                    # Verificar la posición
+                                    if agent.pos[0] == 15 and agent.pos[1] == 6:
+                                        # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                                        agent.speed = np.array([2.0, 0.0])
+                                        agent.color = "Blue"
+                                    elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                                        # Cambiar la dirección a moverse hacia la derecha
+                                        agent.speed = np.array([1.0, 0.0])
+                                        agent.color = "Blue"
+
+                                elif agent.decision == 2:
+                                    # Verificar la posición
+                                    if agent.pos[0] == 15 and agent.pos[1] == 5.5:
+                                        # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                                        agent.speed = np.array([2.0, 0.0])
+                                        agent.color = "Black"
+                                    elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                                        # Cambiar la dirección a moverse hacia la derecha
+                                        agent.speed = np.array([1.0, 0.0])
+                                        agent.color = "Black"
+
+                                elif agent.decision == 3:
+                                    # Verificar la posición
+                                    if agent.pos[0] == 15 and agent.pos[1] == 3.5:
+                                        # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                                        agent.speed = np.array([-2.0, 0.0])
+                                        agent.color = "Gray"
+                                    elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                                        # Cambiar la dirección a moverse hacia la derecha
+                                        agent.speed = np.array([-1.0, 0.0])
+                                        agent.color = "Gray"
+
+                                else:
+                                    # Verificar la posición
+                                    if agent.pos[0] == 15 and agent.pos[1] == 3:
+                                        # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
+                                        agent.speed = np.array([-2.0, 0.0])
+                                        agent.color = "Purple"
+                                    elif agent.pos[0] == 15 and agent.speed[1] == 1.0:
+                                        # Cambiar la dirección a moverse hacia la derecha
+                                        agent.speed = np.array([-1.0, 0.0])
+                                        agent.color = "Purple"
 
             agent.step()
 
@@ -388,15 +425,15 @@ canvas = SimpleCanvas(car_draw, 500, 500)
 
 model_params = {}
 
-server = ModularServer(Street, [canvas], "Traffic", model_params)
+server = ModularServer(Ambience, [canvas], "Traffic", model_params)
 
 
 def setup_model():
-    model = Street()
+    model = Ambience()
     model.step_count = 0  # Reset step count
     return model
 
 
 server.setup_model = setup_model
-server.port = 5100
+server.port = 5200
 server.launch()

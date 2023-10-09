@@ -7,32 +7,19 @@ import math
 from objloader import OBJ
 
 class Car:
-    def __init__(self, obj_filename, dim, vel):
+    def __init__(self, obj_filename, posx,posz, vel):
         self.obj = OBJ(obj_filename, swapyz=True)
-        self.DimBoard = dim
-        self.Position = [random.uniform(-dim, dim), 20, random.uniform(-dim, dim)]
-        self.Direction = [random.uniform(-1, 1), 0, random.uniform(-1, 1)]
-        self.normalize(self.Direction)
-        self.scale(self.Direction, vel)
+        self.Position = [posx, 20, posz]
 
-    def update(self):
-        new_position = [self.Position[0] + self.Direction[0], self.Position[1], self.Position[2] + self.Direction[2]]
-
-        # Verifica si la nueva posición está dentro del borde del plano
-        if -self.DimBoard < new_position[0] < self.DimBoard and -self.DimBoard < new_position[2] < self.DimBoard:
-            self.Position = new_position
-        else:
-            # El carro ha colisionado con el borde del plano, cambia de dirección en un ángulo de 90 grados
-            # Calcula la nueva dirección en función de la dirección actual
-            temp_x = self.Direction[0]
-            self.Direction[0] = -self.Direction[2]
-            self.Direction[2] = temp_x
+    def update(self,x,z):
+        new_pos = [x,20,z]
+        self.Position = new_pos
 
     def draw(self):
         glPushMatrix()
 
         # Calcula el ángulo de rotación en radianes basado en la dirección de movimiento
-        angle = math.atan2(self.Direction[2], self.Direction[0])
+
 
         # Aplica la rotación alrededor del eje Y
         glTranslatef(self.Position[0], self.Position[1], self.Position[2])

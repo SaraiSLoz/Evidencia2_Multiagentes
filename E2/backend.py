@@ -22,19 +22,30 @@ def create():
     model = games[id] = Street()
 
     lista = []
+    agentes=[]
     for agent in model.schedule.agents:
         agente_info = {
             "id": agent.unique_id,
             "x": int(agent.pos[0]),
-            "z": int(agent.pos[1])
+            "z": int(agent.pos[1]),
+            "color": agent.color
         }
 
         if hasattr(agent, 'speed'):
             agente_info["dx"] = int(agent.speed[0])  # Convert int32 to int
             agente_info["dz"] = int(agent.speed[1])  # Convert int32 to int
-        
-        lista.append(agente_info)
-    
+        agentes.append(agente_info)
+    circles_list = games[id].circles
+    circles_dict_list = []
+    for circle in circles_list:
+            circle_dict = {
+                "id": circle.unique_id,
+                "x": circle.x,
+                "z": circle.y,
+                "color": circle.color
+            }
+            circles_dict_list.append(circle_dict)
+    lista = [agentes,circles_dict_list]
     return jsonify(lista), 201, {'Location': f"/games/{id}"}
 
 @app.route("/games/<id>", methods=["GET"])
@@ -43,6 +54,7 @@ def queryState(id):
     model = games[id]
     model.step()
     lista = []
+    agentes = []
     for agent in model.schedule.agents:
         agente_info = {
             "id": agent.unique_id,
@@ -53,8 +65,18 @@ def queryState(id):
         if hasattr(agent, 'speed'):
             agente_info["dx"] = int(agent.speed[0])  # Convert int32 to int
             agente_info["dz"] = int(agent.speed[1])  # Convert int32 to int
-        lista.append(agente_info)
-        
+        agentes.append(agente_info)
+    circles_list = games[id].circles
+    circles_dict_list = []
+    for circle in circles_list:
+            circle_dict = {
+                "id": circle.unique_id,
+                "x": circle.x,
+                "z": circle.y,
+                "color": circle.color
+            }
+            circles_dict_list.append(circle_dict)
+    lista = [agentes,circles_dict_list]
     return jsonify(lista)
 
 app.run(host="0.0.0.0")

@@ -1,3 +1,4 @@
+import requests
 import pygame
 from pygame.locals import *
 from OpenGL.GL import *
@@ -9,9 +10,17 @@ from Supercar import Car
 from semaforo import Semaforo
 from edificio import Edificio
 from faroles import Farol
+from Textures import Texture
 # Variables del juego
-screen_width = 500
-screen_height = 500
+
+URL_BASE = "http://10.50.83.213:5000"
+r = requests.post(URL_BASE + "/games", allow_redirects=False)
+LOCATION = r.headers["Location"]
+lista = r.json()
+print(lista)
+factor = 20
+screen_width = 900
+screen_height = 900
 FOVY = 60.0
 ZNEAR = 0.01
 ZFAR = 900.0
@@ -30,22 +39,25 @@ Y_MIN = -500
 Y_MAX = 500
 Z_MIN = -500
 Z_MAX = 500
-DimBoard = 200
+DimBoard = 280
 plane_x = 0
 plane_z = 0
-plane_speed = 5 
+plane_speed = 5
 
 pygame.init()
-Cars = []
+Cars = {}
 nCars = 5
 Arboles = []
-narbol = 6
-Semaforos = []
+narbol = 8
+Semaforos = {}
 nsemaforos = 3
 Edificios = []
 nedificio = 1
 Faroles = []
 nfaroles = 3
+textures = []
+
+
 def Axis():
     glShadeModel(GL_FLAT)
     glLineWidth(3.0)
@@ -69,8 +81,10 @@ def Axis():
 
     glLineWidth(1.0)
 
+
 def Init():
-    screen = pygame.display.set_mode((screen_width, screen_height), DOUBLEBUF | OPENGL)
+    screen = pygame.display.set_mode(
+        (screen_width, screen_height), DOUBLEBUF | OPENGL)
     pygame.display.set_caption("OpenGL: Cars")
 
     glMatrixMode(GL_PROJECTION)
@@ -79,76 +93,189 @@ def Init():
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    gluLookAt(EYE_X, EYE_Y, EYE_Z, CENTER_X, CENTER_Y, CENTER_Z, UP_X, UP_Y, UP_Z)
+    gluLookAt(EYE_X, EYE_Y, EYE_Z, CENTER_X,
+              CENTER_Y, CENTER_Z, UP_X, UP_Y, UP_Z)
     glClearColor(0, 0, 0, 0)
     glEnable(GL_DEPTH_TEST)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     x1 = -200
     z1 = 0
-    for i in range(narbol):
-        Arboles.append(Arbol(x1,0,z1,10,40))
-        x1 += 30
-    x2 = 30
-    z2 = 0
-    for i in range(narbol):
-        Arboles.append(Arbol(x2,0,z2,10,40))
-        x2 += 30
-    Semaforos.append(Semaforo(15.8,0,-2.6,5.0, 50.0, 20))
-    Semaforos.append(Semaforo(13.6,0,6.5,5.0, 50.0, 20))
-    Semaforos.append(Semaforo(26.5,0,7,5.0, 50.0, 20))
-    
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj",0,0,230))
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj",0,0,-230))
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj",100,0,-230))
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj",-100,0,-230))
-    
-    Faroles.append(Farol("Streetlight_LowRes.obj",30,0,20))
-    Faroles.append(Farol("Streetlight_LowRes.obj",60,0,20))
-    Faroles.append(Farol("Streetlight_LowRes.obj",-30,0,20))
-    Faroles.append(Farol("Streetlight_LowRes.obj",-60,0,20))
-    
-    #Streetlight_LowRes
-    for i in range(nCars):
-        Cars.append(Car("Car.obj", DimBoard, 1.0))  # Reemplaza "Car.obj" con la ruta de tu archivo .obj
+
+    tree_coordinates = [
+        (-200, 0, 200),
+        (-150, 0, 200),
+        (-100, 0, 200),
+        (-50, 0, 200),
+        (-200, 0, 160),
+        (-150, 0, 160),
+        (-100, 0, 160),
+        (-50, 0, 160),
+        (-200, 0, 120),
+        (-150, 0, 120),
+        (-100, 0, 120),
+        (-50, 0, 120),
+        (-200, 0, 80),
+        (-150, 0, 80),
+        (-100, 0, 80),
+        (-50, 0, 80)
+    ]
+
+    # Agregar los árboles usando las coordenadas especificadas
+    for coords in tree_coordinates:
+        Arboles.append(
+            Arbol(*coords, 8, 35))
+    for agent in lista[1]:
+        Semaforos[agent["id"]] = Semaforo(agent["x"]*15-190,0,agent["z"]*50-260,5.0, 50.0, 20)
+    for agent in lista[0]:
+        car = Car("Car.obj", agent["x"], agent["z"], 1.0, agent.get("color"))
+        Cars[agent["id"]] = car
+
+      # Definir y cargar las texturas
+    textures.append(Texture("pasto.bmp"))
+    textures.append(Texture("textura2.bmp"))
+    textures.append(Texture("textura22.bmp"))
+    textures.append(Texture("calle.bmp"))
+
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 30, 8, 230))
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 130, 8, 120))
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 160, 8, 120))
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 190, 8, 120))
+
+    Faroles.append(Farol("Streetlight_LowRes.obj", 110, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", 160, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", 210, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", 260, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -50, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -100, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -150, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -200, 4, -65))
+
+    # Streetlight_LowRes
+
 
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     Axis()
 
-    # Cambia el color del plano a gris claro
-    glColor3f(0.9, 0.9, 0.9)  # Gris claro
+    # Enable texture
+    glEnable(GL_TEXTURE_2D)
 
+    # Render the ground plane with grass texture
+    # Assuming textures[0] is the grass texture
+    glBindTexture(GL_TEXTURE_2D, textures[0].id)
+    glColor(1, 1, 1)
     glBegin(GL_QUADS)
-    glTexCoord2f(0, 0)  # Coordenadas de textura para el vértice 1
+    glTexCoord2f(0, 0)
     glVertex3d(-DimBoard, 0, -DimBoard)
 
-    glTexCoord2f(1, 0)  # Coordenadas de textura para el vértice 2
+    glTexCoord2f(0, 1)
     glVertex3d(-DimBoard, 0, DimBoard)
 
-    glTexCoord2f(1, 1)  # Coordenadas de textura para el vértice 3
+    glTexCoord2f(1, 1)
     glVertex3d(DimBoard, 0, DimBoard)
 
-    glTexCoord2f(0, 1)  # Coordenadas de textura para el vértice 4
+    glTexCoord2f(1, 0)
     glVertex3d(DimBoard, 0, -DimBoard)
     glEnd()
 
-    glDisable(GL_TEXTURE_2D)  # Deshabilita la textura
-    for semaforo in Semaforos:
+    # Render a section of the ground plane with road texture (slightly elevated)
+    # Assuming textures[1] is the road texture
+    glBindTexture(GL_TEXTURE_2D, textures[2].id)
+    glColor(1, 1, 1)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0)
+    # Adjust the y-coordinate to elevate the road
+    glVertex3d(0, 1, -80)
+    glTexCoord2f(0, 1)
+    glVertex3d(0, 1, 200)
+    glTexCoord2f(1, 1)
+    glVertex3d(55, 1, 200)
+    glTexCoord2f(1, 0)
+    glVertex3d(55, 1, -80)
+    glEnd()
+
+    glBindTexture(GL_TEXTURE_2D, textures[1].id)
+    glColor(1, 1, 1)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0)
+    # Adjust the y-coordinate to elevate the road
+    glVertex3d(-DimBoard, 2, -50)
+    glTexCoord2f(0, 1)
+    glVertex3d(-DimBoard, 2, 50)
+    glTexCoord2f(1, 1)
+    glVertex3d(DimBoard, 2, 50)
+    glTexCoord2f(1, 0)
+    glVertex3d(DimBoard, 2, -50)
+    glEnd()
+
+    glBindTexture(GL_TEXTURE_2D, textures[1].id)
+    glColor(1, 1, 1)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0)
+    # Adjust the y-coordinate to elevate the road
+    glVertex3d(-DimBoard, 1, -180)
+    glTexCoord2f(0, 1)
+    glVertex3d(-DimBoard, 1, -80)
+    glTexCoord2f(1, 1)
+    glVertex3d(DimBoard, 1, -80)
+    glTexCoord2f(1, 0)
+    glVertex3d(DimBoard, 1, -180)
+    glEnd()
+
+    glBindTexture(GL_TEXTURE_2D, textures[3].id)
+    glColor(1, 1, 1)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0)
+    glEnd()
+    # glBindTexture(GL_TEXTURE_2D, textures[1].id)
+    # glColor(1, 1, 1)
+    # glBegin(GL_QUADS)
+    # glTexCoord2f(0, 0)
+    # # Adjust the y-coordinate to elevate the road
+    # glVertex3d(0, 1, 0)
+    # glTexCoord2f(0, 1)
+    # glVertex3d(-10, 1, 70)
+    # glTexCoord2f(1, 1)
+    # glVertex3d(0, 1, 0)
+    # glTexCoord2f(1, 0)
+    # glVertex3d(10, 1, -70)
+    # glEnd()
+
+    glDisable(GL_TEXTURE_2D)  # Disable texture for other objects
+
+    # Render the buildings (without texture, using gray color)
+    glColor(0.5, 0.5, 0.5)  # Set gray color for buildings
+    for semaforo in Semaforos.values():
         semaforo.draw()
-    for arbol in Arboles:
-        arbol.draw()
     for edificio in Edificios:
         edificio.draw()
+
+    # Render other objects (trees, streetlights, cars)
+    for arbol in Arboles:
+        glColor(1, 1, 1)  # Set white color for other objects
+        arbol.draw()
     for faroles in Faroles:
         faroles.draw()
-    for car in Cars:
-        car.draw()
-        car.update()
+    response = requests.get(URL_BASE + LOCATION)
+    lista = response.json()
+
+    for Car in Cars.values():
+        Car.draw()
     
+    for agent in lista[0]:
+        car_id = agent["id"]
+
+        if car_id in Cars:
+            Cars[car_id].update(agent["x"]*15-190, agent["z"]*50-260,agent.get("color"))
+        else:
+            continue
+            
+
 
 def main():
     global EYE_X, EYE_Y, EYE_Z, CENTER_X, CENTER_Y, CENTER_Z
-    angle = math.radians(45)  # Inicializamos el ángulo de rotación a 45 grados en radianes
+    # Inicializamos el ángulo de rotación a 45 grados en radianes
+    angle = math.radians(45)
 
     radius = 400  # Radio para la rotación
     Init()
@@ -175,13 +302,15 @@ def main():
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        gluLookAt(EYE_X, EYE_Y, EYE_Z, CENTER_X, CENTER_Y, CENTER_Z, UP_X, UP_Y, UP_Z)
+        gluLookAt(EYE_X, EYE_Y, EYE_Z, CENTER_X,
+                  CENTER_Y, CENTER_Z, UP_X, UP_Y, UP_Z)
 
         display()
 
         pygame.display.flip()
-        pygame.time.wait(10)
-
+        pygame.time.wait(100)
     pygame.quit()
+
+
 if __name__ == "__main__":
     main()

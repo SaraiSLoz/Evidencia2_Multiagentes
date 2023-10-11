@@ -13,7 +13,7 @@ from faroles import Farol
 from Textures import Texture
 # Variables del juego
 
-URL_BASE = "http://localhost:5000"
+URL_BASE = "http://192.168.5.87:5000"
 r = requests.post(URL_BASE + "/games", allow_redirects=False)
 LOCATION = r.headers["Location"]
 lista = r.json()
@@ -39,7 +39,7 @@ Y_MIN = -500
 Y_MAX = 500
 Z_MIN = -500
 Z_MAX = 500
-DimBoard = 230
+DimBoard = 280
 plane_x = 0
 plane_z = 0
 plane_speed = 5
@@ -48,7 +48,7 @@ pygame.init()
 Cars = {}
 nCars = 5
 Arboles = []
-narbol = 10
+narbol = 8
 Semaforos = {}
 nsemaforos = 3
 Edificios = []
@@ -101,18 +101,33 @@ def Init():
     x1 = -200
     z1 = 0
 
-    for i in range(narbol):
-        Arboles.append(Arbol(x1, 0, z1, 8, 35))
-        x1 += 30
-    x2 = 30
-    z2 = 0
-    for i in range(narbol):
-        Arboles.append(Arbol(x2, 0, z2, 8, 35))
-        x2 += 30
+    tree_coordinates = [
+        (-200, 0, 200),
+        (-150, 0, 200),
+        (-100, 0, 200),
+        (-50, 0, 200),
+        (-200, 0, 160),
+        (-150, 0, 160),
+        (-100, 0, 160),
+        (-50, 0, 160),
+        (-200, 0, 120),
+        (-150, 0, 120),
+        (-100, 0, 120),
+        (-50, 0, 120),
+        (-200, 0, 80),
+        (-150, 0, 80),
+        (-100, 0, 80),
+        (-50, 0, 80)
+    ]
+
+    # Agregar los árboles usando las coordenadas especificadas
+    for coords in tree_coordinates:
+        Arboles.append(
+            Arbol(*coords, 8, 35))
     # for agent in lista[1]:
         # Semaforos[agent["id"]] = Semaforo(agent["x"]*factor-DimBoard,0,agent["z"]*factor-DimBoard,5.0, 50.0, 20
     for agent in lista:
-        car = Car("Car.obj", agent["x"], agent["z"], 1.0)
+        car = Car("Car.obj", agent["x"], agent["z"], 1.0, agent.get("color"))
         Cars[agent["id"]] = car
 
       # Definir y cargar las texturas
@@ -121,15 +136,19 @@ def Init():
     textures.append(Texture("textura22.bmp"))
     textures.append(Texture("calle.bmp"))
 
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 0, 0, 230))
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 0, 0, -230))
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 100, 0, -230))
-    Edificios.append(Edificio("house/Tower-HouseDesign.obj", -100, 0, -230))
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 30, 8, 230))
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 130, 8, 120))
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 160, 8, 120))
+    Edificios.append(Edificio("house/Tower-HouseDesign.obj", 190, 8, 120))
 
-    Faroles.append(Farol("Streetlight_LowRes.obj", 30, 0, 20))
-    Faroles.append(Farol("Streetlight_LowRes.obj", 60, 0, 20))
-    Faroles.append(Farol("Streetlight_LowRes.obj", -30, 0, 20))
-    Faroles.append(Farol("Streetlight_LowRes.obj", -60, 0, 20))
+    Faroles.append(Farol("Streetlight_LowRes.obj", 110, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", 160, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", 210, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", 260, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -50, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -100, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -150, 4, -65))
+    Faroles.append(Farol("Streetlight_LowRes.obj", -200, 4, -65))
 
     # Streetlight_LowRes
 
@@ -166,13 +185,13 @@ def display():
     glBegin(GL_QUADS)
     glTexCoord2f(0, 0)
     # Adjust the y-coordinate to elevate the road
-    glVertex3d(0, 1, -DimBoard)
+    glVertex3d(0, 1, -80)
     glTexCoord2f(0, 1)
-    glVertex3d(0, 1, DimBoard)
+    glVertex3d(0, 1, 200)
     glTexCoord2f(1, 1)
-    glVertex3d(55, 1, DimBoard)
+    glVertex3d(55, 1, 200)
     glTexCoord2f(1, 0)
-    glVertex3d(55, 1, -DimBoard)
+    glVertex3d(55, 1, -80)
     glEnd()
 
     glBindTexture(GL_TEXTURE_2D, textures[1].id)
@@ -180,13 +199,27 @@ def display():
     glBegin(GL_QUADS)
     glTexCoord2f(0, 0)
     # Adjust the y-coordinate to elevate the road
-    glVertex3d(-DimBoard, 1, -50)
+    glVertex3d(-DimBoard, 2, -50)
     glTexCoord2f(0, 1)
-    glVertex3d(-DimBoard, 1, 50)
+    glVertex3d(-DimBoard, 2, 50)
     glTexCoord2f(1, 1)
-    glVertex3d(DimBoard, 1, 50)
+    glVertex3d(DimBoard, 2, 50)
     glTexCoord2f(1, 0)
-    glVertex3d(DimBoard, 1, -50)
+    glVertex3d(DimBoard, 2, -50)
+    glEnd()
+
+    glBindTexture(GL_TEXTURE_2D, textures[1].id)
+    glColor(1, 1, 1)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0, 0)
+    # Adjust the y-coordinate to elevate the road
+    glVertex3d(-DimBoard, 1, -180)
+    glTexCoord2f(0, 1)
+    glVertex3d(-DimBoard, 1, -80)
+    glTexCoord2f(1, 1)
+    glVertex3d(DimBoard, 1, -80)
+    glTexCoord2f(1, 0)
+    glVertex3d(DimBoard, 1, -180)
     glEnd()
 
     glBindTexture(GL_TEXTURE_2D, textures[3].id)
@@ -270,7 +303,7 @@ def main():
         display()
 
         pygame.display.flip()
-        pygame.time.wait(10)
+        pygame.time.wait(100)
 
     pygame.quit()
 

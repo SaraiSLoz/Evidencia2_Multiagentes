@@ -13,7 +13,7 @@ class Semaforo:
         self.radius = radius
         self.height = height
         self.sides = sides
-        
+      
 
 
     def update(self, color):
@@ -74,9 +74,26 @@ class Semaforo:
     def draw(self):
         glPushMatrix()
         glTranslatef(self.x, self.y, self.z)
-        glRotate(-90, 1, 0, 0)
-        self.configure_material()
+        glColor3f(0.5, 0.5, 0.5)
+        #glRotate(-90, 1, 0, 0)
+      
+        
+        if self.z == 6.5*50-260:
+            glRotate(-90, 1, 0, 0)
+            glRotate(-90, 0, 0, 1)  
+        elif self.z == 1.6*50-260:
+            glRotate(-90, 1, 0, 0)
+            glRotate(90, 0, 0, 1) 
+        elif self.z == 7*50-260:
+            glRotate(-90, 1, 0, 0)
+     
+        
+            
         self.half_cylinder(self.radius, self.height + 5, self.sides)
+        
+        
+        
+        self.configure_material()
         glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
         self.cylinder(self.radius * 0.75, self.height, self.sides)
         glPopMatrix()

@@ -150,7 +150,7 @@ class Street(Model):
             self.schedule.add(car)
         self.circles = [
             # primercirculo
-            Circle(self.next_id(), self, 15.8, 2.6, 4),
+            Circle(self.next_id(), self, 15.8, 1.6, 4),
             # segundocirculo
             Circle(self.next_id(), self, 13.2, 6.5, 4),
             # tercercirculo

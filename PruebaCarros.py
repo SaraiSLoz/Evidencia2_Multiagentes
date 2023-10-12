@@ -1,3 +1,4 @@
+
 import requests
 import pygame
 from pygame.locals import *
@@ -13,7 +14,7 @@ from faroles import Farol
 from Textures import Texture
 # Variables del juego
 
-URL_BASE = "http://192.168.5.87:5000"
+URL_BASE = "http://10.50.80.11:5000"
 r = requests.post(URL_BASE + "/games", allow_redirects=False)
 LOCATION = r.headers["Location"]
 lista = r.json()
@@ -100,6 +101,17 @@ def Init():
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     x1 = -200
     z1 = 0
+    
+    glLightfv(GL_LIGHT0, GL_AMBIENT, (0.5, 0.5, 0.5, 1.0))  # Color de la luz ambiental
+
+    # Configurar la luz
+    glLightfv(GL_LIGHT0, GL_POSITION, (1.0, 1.0, 1.0, 0.0))  # Posición de la luz
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))  # Color difuso
+
+
+    # Configurar la luz
+    glLightfv(GL_LIGHT0, GL_POSITION, (1.0, 1.0, 1.0, 0.0))  # Posición de la luz
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))  # Color difuso
 
     tree_coordinates = [
         (-200, 0, 200),
@@ -124,9 +136,9 @@ def Init():
     for coords in tree_coordinates:
         Arboles.append(
             Arbol(*coords, 8, 35))
-    # for agent in lista[1]:
-        # Semaforos[agent["id"]] = Semaforo(agent["x"]*factor-DimBoard,0,agent["z"]*factor-DimBoard,5.0, 50.0, 20
-    for agent in lista:
+    for agent in lista[1]:
+        Semaforos[agent["id"]] = Semaforo(agent["x"]*15-190,0,agent["z"]*50-260,5.0, 50.0, 20, agent.get("color"))
+    for agent in lista[0]:
         car = Car("Car.obj", agent["x"], agent["z"], 1.0, agent.get("color"))
         Cars[agent["id"]] = car
 
@@ -245,6 +257,17 @@ def display():
 
     # Render the buildings (without texture, using gray color)
     glColor(0.5, 0.5, 0.5)  # Set gray color for buildings
+    
+    
+    light_position = (0.0, 0.0, 50.0, 1.0)
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position)
+    
+    for semaforo in Semaforos.values():
+        semaforo.draw()
+        
+        
+        
+            
     for edificio in Edificios:
         edificio.draw()
 
@@ -254,17 +277,28 @@ def display():
         arbol.draw()
     for faroles in Faroles:
         faroles.draw()
-    for Car in Cars.values():
-        Car.draw()
     response = requests.get(URL_BASE + LOCATION)
     lista = response.json()
-    for agent in lista:
+
+    for Car in Cars.values():
+        Car.draw()
+    
+    for agent in lista[0]:
         car_id = agent["id"]
 
         if car_id in Cars:
-            Cars[car_id].update(agent["x"]*15-190, agent["z"]*50-260)
+            Cars[car_id].update(agent["x"]*15-190, agent["z"]*50-260,agent.get("color"))
         else:
             continue
+            
+    for agent in lista[1]:
+        semaforo_id = agent["id"]
+
+        if semaforo_id in Semaforos:
+            Semaforos[semaforo_id].update(agent.get("color"))
+        else:
+            continue
+
 
 
 def main():
@@ -304,7 +338,6 @@ def main():
 
         pygame.display.flip()
         pygame.time.wait(100)
-
     pygame.quit()
 
 

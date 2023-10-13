@@ -1,4 +1,3 @@
-
 import requests
 import pygame
 from pygame.locals import *
@@ -12,9 +11,10 @@ from semaforo import Semaforo
 from edificio import Edificio
 from faroles import Farol
 from Textures import Texture
+import uuid
 # Variables del juego
 
-URL_BASE = "http://10.50.80.11:5000"
+URL_BASE = "http://10.50.81.8:5000"
 r = requests.post(URL_BASE + "/games", allow_redirects=False)
 LOCATION = r.headers["Location"]
 lista = r.json()
@@ -40,7 +40,7 @@ Y_MIN = -500
 Y_MAX = 500
 Z_MIN = -500
 Z_MAX = 500
-DimBoard = 280
+DimBoard = 200
 plane_x = 0
 plane_z = 0
 plane_speed = 5
@@ -57,6 +57,10 @@ nedificio = 1
 Faroles = []
 nfaroles = 3
 textures = []
+
+# Agrega un contador de pasos y un límite para la eliminación cada 10 pasos
+step_counter = 0
+deletion_interval = 10
 
 
 def Axis():
@@ -101,17 +105,6 @@ def Init():
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     x1 = -200
     z1 = 0
-    
-    glLightfv(GL_LIGHT0, GL_AMBIENT, (0.5, 0.5, 0.5, 1.0))  # Color de la luz ambiental
-
-    # Configurar la luz
-    glLightfv(GL_LIGHT0, GL_POSITION, (1.0, 1.0, 1.0, 0.0))  # Posición de la luz
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))  # Color difuso
-
-
-    # Configurar la luz
-    glLightfv(GL_LIGHT0, GL_POSITION, (1.0, 1.0, 1.0, 0.0))  # Posición de la luz
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))  # Color difuso
 
     tree_coordinates = [
         (-200, 0, 200),
@@ -136,9 +129,9 @@ def Init():
     for coords in tree_coordinates:
         Arboles.append(
             Arbol(*coords, 8, 35))
-    for agent in lista[1]:
-        Semaforos[agent["id"]] = Semaforo(agent["x"]*15-190,0,agent["z"]*50-260,5.0, 50.0, 20, agent.get("color"))
-    for agent in lista[0]:
+    # for agent in lista[1]:
+        # Semaforos[agent["id"]] = Semaforo(agent["x"]*factor-DimBoard,0,agent["z"]*factor-DimBoard,5.0, 50.0, 20
+    for agent in lista:
         car = Car("Car.obj", agent["x"], agent["z"], 1.0, agent.get("color"))
         Cars[agent["id"]] = car
 
@@ -165,10 +158,26 @@ def Init():
     # Streetlight_LowRes
 
 
+
 def display():
+    global step_counter
+
+    # Resto del código...
+
+    # Incrementar el contador de pasos
+    step_counter += 1
+
+    # Crear un agente naranja cada 10 pasos
+    # Crear un agente naranja cada 10 pasos
+    # if step_counter % 10 == 0:
+    #     new_agent_id = str(uuid.uuid4())  # Generar un nuevo ID de agente
+    #     # Crear un nuevo agente naranja en una posición específica
+    #     car_instance = Car("Car.obj", random.uniform(-DimBoard, DimBoard),
+    #                        0, random.uniform(-DimBoard, DimBoard), "Orange")
+    #     # Agregar el agente a la lista
+    #     Cars[new_agent_id] = car_instance
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     Axis()
-
     # Enable texture
     glEnable(GL_TEXTURE_2D)
 
@@ -257,17 +266,6 @@ def display():
 
     # Render the buildings (without texture, using gray color)
     glColor(0.5, 0.5, 0.5)  # Set gray color for buildings
-    
-    
-    light_position = (0.0, 0.0, 50.0, 1.0)
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position)
-    
-    for semaforo in Semaforos.values():
-        semaforo.draw()
-        
-        
-        
-            
     for edificio in Edificios:
         edificio.draw()
 
@@ -277,28 +275,18 @@ def display():
         arbol.draw()
     for faroles in Faroles:
         faroles.draw()
+    for car_instance in Cars.values():
+        car_instance.draw()
     response = requests.get(URL_BASE + LOCATION)
     lista = response.json()
-
-    for Car in Cars.values():
-        Car.draw()
-    
-    for agent in lista[0]:
+    for agent in lista:
         car_id = agent["id"]
 
         if car_id in Cars:
-            Cars[car_id].update(agent["x"]*15-190, agent["z"]*50-260,agent.get("color"))
+            Cars[car_id].update(agent["x"]*15-190, agent["z"]
+                                * 50-260, agent.get("color"))
         else:
             continue
-            
-    for agent in lista[1]:
-        semaforo_id = agent["id"]
-
-        if semaforo_id in Semaforos:
-            Semaforos[semaforo_id].update(agent.get("color"))
-        else:
-            continue
-
 
 
 def main():
@@ -310,6 +298,7 @@ def main():
     Init()
     done = False
     while not done:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
@@ -337,7 +326,8 @@ def main():
         display()
 
         pygame.display.flip()
-        pygame.time.wait(100)
+        pygame.time.wait(90)
+
     pygame.quit()
 
 

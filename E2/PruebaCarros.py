@@ -11,9 +11,10 @@ from semaforo import Semaforo
 from edificio import Edificio
 from faroles import Farol
 from Textures import Texture
+
 # Variables del juego
 
-URL_BASE = "http://10.50.83.213:5000"
+URL_BASE = "http://127.0.0.1:5000"
 r = requests.post(URL_BASE + "/games", allow_redirects=False)
 LOCATION = r.headers["Location"]
 lista = r.json()
@@ -58,28 +59,38 @@ nfaroles = 3
 textures = []
 
 
-def Axis():
-    glShadeModel(GL_FLAT)
-    glLineWidth(3.0)
-    glColor3f(1.0, 0.0, 0.0)  # X axis in red
-    glBegin(GL_LINES)
-    glVertex3f(X_MIN, 0.0, 0.0)
-    glVertex3f(X_MAX, 0.0, 0.0)
-    glEnd()
+def add_cars(id_car, x, y, color):
+    car = Car("Car.obj", x, y, 1.0, color)
+    Cars[id_car] = car
 
-    glColor3f(0.0, 1.0, 0.0)  # Y axis in green
-    glBegin(GL_LINES)
-    glVertex3f(0.0, Y_MIN, 0.0)
-    glVertex3f(0.0, Y_MAX, 0.0)
-    glEnd()
 
-    glColor3f(0.0, 0.0, 1.0)  # Z axis in blue
-    glBegin(GL_LINES)
-    glVertex3f(0.0, 0.0, Z_MIN)
-    glVertex3f(0.0, 0.0, Z_MAX)
-    glEnd()
+def delete_cars(car_id):
+    if car_id in Cars:
+        del Cars[car_id]
 
-    glLineWidth(1.0)
+
+# def Axis():
+#     glShadeModel(GL_FLAT)
+#     glLineWidth(3.0)
+#     glColor3f(1.0, 0.0, 0.0)  # X axis in red
+#     glBegin(GL_LINES)
+#     glVertex3f(X_MIN, 0.0, 0.0)
+#     glVertex3f(X_MAX, 0.0, 0.0)
+#     glEnd()
+
+#     glColor3f(0.0, 1.0, 0.0)  # Y axis in green
+#     glBegin(GL_LINES)
+#     glVertex3f(0.0, Y_MIN, 0.0)
+#     glVertex3f(0.0, Y_MAX, 0.0)
+#     glEnd()
+
+#     glColor3f(0.0, 0.0, 1.0)  # Z axis in blue
+#     glBegin(GL_LINES)
+#     glVertex3f(0.0, 0.0, Z_MIN)
+#     glVertex3f(0.0, 0.0, Z_MAX)
+#     glEnd()
+
+#     glLineWidth(1.0)
 
 
 def Init():
@@ -125,7 +136,8 @@ def Init():
         Arboles.append(
             Arbol(*coords, 8, 35))
     for agent in lista[1]:
-        Semaforos[agent["id"]] = Semaforo(agent["x"]*15-190,0,agent["z"]*50-260,5.0, 50.0, 20)
+        Semaforos[agent["id"]] = Semaforo(
+            agent["x"]*15-190, 0, agent["z"]*50-260, 5.0, 50.0, 20, agent.get("color"))
     for agent in lista[0]:
         car = Car("Car.obj", agent["x"], agent["z"], 1.0, agent.get("color"))
         Cars[agent["id"]] = car
@@ -135,6 +147,7 @@ def Init():
     textures.append(Texture("textura2.bmp"))
     textures.append(Texture("textura22.bmp"))
     textures.append(Texture("calle.bmp"))
+    textures.append(Texture("nubes.bmp"))
 
     Edificios.append(Edificio("house/Tower-HouseDesign.obj", 30, 8, 230))
     Edificios.append(Edificio("house/Tower-HouseDesign.obj", 130, 8, 120))
@@ -154,8 +167,10 @@ def Init():
 
 
 def display():
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    Axis()
+    # Axis()
+    glClearColor(0.529, 0.807, 0.92, 0)  # RGB para azul cielo
 
     # Enable texture
     glEnable(GL_TEXTURE_2D)
@@ -163,6 +178,9 @@ def display():
     # Render the ground plane with grass texture
     # Assuming textures[0] is the grass texture
     glBindTexture(GL_TEXTURE_2D, textures[0].id)
+
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
+
     glColor(1, 1, 1)
     glBegin(GL_QUADS)
     glTexCoord2f(0, 0)
@@ -245,8 +263,13 @@ def display():
 
     # Render the buildings (without texture, using gray color)
     glColor(0.5, 0.5, 0.5)  # Set gray color for buildings
+
+    light_position = (0.0, 0.0, 50.0, 1.0)
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position)
+
     for semaforo in Semaforos.values():
         semaforo.draw()
+
     for edificio in Edificios:
         edificio.draw()
 
@@ -261,21 +284,40 @@ def display():
 
     for Car in Cars.values():
         Car.draw()
-    
-    for agent in lista[0]:
+
+    car_agents = lista[0]
+
+    for agent in car_agents:
         car_id = agent["id"]
+        car_color = agent.get("color")
 
         if car_id in Cars:
-            Cars[car_id].update(agent["x"]*15-190, agent["z"]*50-260,agent.get("color"))
+            Cars[car_id].update(agent["x"]*15-190,
+                                agent["z"]*50-260, car_color)
+        elif car_color != "Orange":
+            delete_cars(car_id)
+        else:
+            add_cars(car_id, agent["x"], agent["z"], agent.get("color"))
+
+    for agent in lista[1]:
+        semaforo_id = agent["id"]
+
+        if semaforo_id in Semaforos:
+            Semaforos[semaforo_id].update(agent.get("color"))
         else:
             continue
-            
-
-
+        
+def play_sound(sound_file):
+    pygame.mixer.init()
+    pygame.mixer.music.load(sound_file)
+    pygame.mixer.music.play()
+    
 def main():
     global EYE_X, EYE_Y, EYE_Z, CENTER_X, CENTER_Y, CENTER_Z
     # Inicializamos el ángulo de rotación a 45 grados en radianes
     angle = math.radians(45)
+    
+    play_sound("LightTrafficSoundEffect.mp3")
 
     radius = 400  # Radio para la rotación
     Init()

@@ -4,6 +4,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 import math
 
+
 class Semaforo:
     def __init__(self, x, y, z, radius, height, sides, color):
         self.x = x  # Coordenada x
@@ -13,12 +14,10 @@ class Semaforo:
         self.radius = radius
         self.height = height
         self.sides = sides
-      
-
 
     def update(self, color):
-            self.color = color
-        
+        self.color = color
+
     def half_cylinder(self, radius, height, sides):
         angle = (2.0 * math.pi) / sides
 
@@ -59,40 +58,34 @@ class Semaforo:
             glVertex3f(x, y, height)
         glEnd()
 
-        
     def configure_material(self):
-            if self.color == "Red":
-                glColor3f(1.0, 0.0, 0.0)  # Rojo
-                glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 0.0, 1.0))
-            elif self.color == "Yellow":
-                glColor3f(1.0, 1.0, 0.0)  # Amarillo
-                glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 1.0, 0.0, 1.0))
-            elif self.color == "Green":
-                glColor3f(0.0, 1.0, 0.0)  # Verde
-                glMaterialfv(GL_FRONT, GL_DIFFUSE, (0.0, 1.0, 0.0, 1.0))
+        if self.color == "Red":
+            glColor3f(1.0, 0.0, 0.0)  # Rojo
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 0.0, 1.0))
+        elif self.color == "Yellow":
+            glColor3f(1.0, 1.0, 0.0)  # Amarillo
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 1.0, 0.0, 1.0))
+        elif self.color == "Green":
+            glColor3f(0.0, 1.0, 0.0)  # Verde
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, (0.0, 1.0, 0.0, 1.0))
 
     def draw(self):
         glPushMatrix()
         glTranslatef(self.x, self.y, self.z)
         glColor3f(0.5, 0.5, 0.5)
         #glRotate(-90, 1, 0, 0)
-      
-        
+
         if self.z == 6.5*50-260:
             glRotate(-90, 1, 0, 0)
-            glRotate(-90, 0, 0, 1)  
+            glRotate(-90, 0, 0, 1)
         elif self.z == 1.6*50-260:
             glRotate(-90, 1, 0, 0)
-            glRotate(90, 0, 0, 1) 
+            glRotate(90, 0, 0, 1)
         elif self.z == 7*50-260:
             glRotate(-90, 1, 0, 0)
-     
-        
-            
+
         self.half_cylinder(self.radius, self.height + 5, self.sides)
-        
-        
-        
+
         self.configure_material()
         glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
         self.cylinder(self.radius * 0.75, self.height, self.sides)

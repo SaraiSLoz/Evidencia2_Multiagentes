@@ -11,10 +11,9 @@ from semaforo import Semaforo
 from edificio import Edificio
 from faroles import Farol
 from Textures import Texture
-import uuid
 # Variables del juego
 
-URL_BASE = "http://10.50.81.8:5000"
+URL_BASE = "http://127.0.0.1:5000"
 r = requests.post(URL_BASE + "/games", allow_redirects=False)
 LOCATION = r.headers["Location"]
 lista = r.json()
@@ -40,7 +39,7 @@ Y_MIN = -500
 Y_MAX = 500
 Z_MIN = -500
 Z_MAX = 500
-DimBoard = 200
+DimBoard = 280
 plane_x = 0
 plane_z = 0
 plane_speed = 5
@@ -58,33 +57,39 @@ Faroles = []
 nfaroles = 3
 textures = []
 
-# Agrega un contador de pasos y un límite para la eliminación cada 10 pasos
-step_counter = 0
-deletion_interval = 10
+
+def add_cars(id_car, x, y, color):
+    car = Car("Car.obj", x, y, 1.0, color)
+    Cars[id_car] = car
 
 
-def Axis():
-    glShadeModel(GL_FLAT)
-    glLineWidth(3.0)
-    glColor3f(1.0, 0.0, 0.0)  # X axis in red
-    glBegin(GL_LINES)
-    glVertex3f(X_MIN, 0.0, 0.0)
-    glVertex3f(X_MAX, 0.0, 0.0)
-    glEnd()
+def delete_cars(car_id):
+    if car_id in Cars:
+        del Cars[car_id]
 
-    glColor3f(0.0, 1.0, 0.0)  # Y axis in green
-    glBegin(GL_LINES)
-    glVertex3f(0.0, Y_MIN, 0.0)
-    glVertex3f(0.0, Y_MAX, 0.0)
-    glEnd()
 
-    glColor3f(0.0, 0.0, 1.0)  # Z axis in blue
-    glBegin(GL_LINES)
-    glVertex3f(0.0, 0.0, Z_MIN)
-    glVertex3f(0.0, 0.0, Z_MAX)
-    glEnd()
+# def Axis():
+#     glShadeModel(GL_FLAT)
+#     glLineWidth(3.0)
+#     glColor3f(1.0, 0.0, 0.0)  # X axis in red
+#     glBegin(GL_LINES)
+#     glVertex3f(X_MIN, 0.0, 0.0)
+#     glVertex3f(X_MAX, 0.0, 0.0)
+#     glEnd()
 
-    glLineWidth(1.0)
+#     glColor3f(0.0, 1.0, 0.0)  # Y axis in green
+#     glBegin(GL_LINES)
+#     glVertex3f(0.0, Y_MIN, 0.0)
+#     glVertex3f(0.0, Y_MAX, 0.0)
+#     glEnd()
+
+#     glColor3f(0.0, 0.0, 1.0)  # Z axis in blue
+#     glBegin(GL_LINES)
+#     glVertex3f(0.0, 0.0, Z_MIN)
+#     glVertex3f(0.0, 0.0, Z_MAX)
+#     glEnd()
+
+#     glLineWidth(1.0)
 
 
 def Init():
@@ -129,9 +134,10 @@ def Init():
     for coords in tree_coordinates:
         Arboles.append(
             Arbol(*coords, 8, 35))
-    # for agent in lista[1]:
-        # Semaforos[agent["id"]] = Semaforo(agent["x"]*factor-DimBoard,0,agent["z"]*factor-DimBoard,5.0, 50.0, 20
-    for agent in lista:
+    for agent in lista[1]:
+        Semaforos[agent["id"]] = Semaforo(
+            agent["x"]*15-190, 0, agent["z"]*50-260, 5.0, 50.0, 20, agent.get("color"))
+    for agent in lista[0]:
         car = Car("Car.obj", agent["x"], agent["z"], 1.0, agent.get("color"))
         Cars[agent["id"]] = car
 
@@ -140,6 +146,7 @@ def Init():
     textures.append(Texture("textura2.bmp"))
     textures.append(Texture("textura22.bmp"))
     textures.append(Texture("calle.bmp"))
+    textures.append(Texture("nubes.bmp"))
 
     Edificios.append(Edificio("house/Tower-HouseDesign.obj", 30, 8, 230))
     Edificios.append(Edificio("house/Tower-HouseDesign.obj", 130, 8, 120))
@@ -158,32 +165,21 @@ def Init():
     # Streetlight_LowRes
 
 
-
 def display():
-    global step_counter
 
-    # Resto del código...
-
-    # Incrementar el contador de pasos
-    step_counter += 1
-
-    # Crear un agente naranja cada 10 pasos
-    # Crear un agente naranja cada 10 pasos
-    # if step_counter % 10 == 0:
-    #     new_agent_id = str(uuid.uuid4())  # Generar un nuevo ID de agente
-    #     # Crear un nuevo agente naranja en una posición específica
-    #     car_instance = Car("Car.obj", random.uniform(-DimBoard, DimBoard),
-    #                        0, random.uniform(-DimBoard, DimBoard), "Orange")
-    #     # Agregar el agente a la lista
-    #     Cars[new_agent_id] = car_instance
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    Axis()
+    # Axis()
+    glClearColor(0.529, 0.807, 0.92, 0)  # RGB para azul cielo
+
     # Enable texture
     glEnable(GL_TEXTURE_2D)
 
     # Render the ground plane with grass texture
     # Assuming textures[0] is the grass texture
     glBindTexture(GL_TEXTURE_2D, textures[0].id)
+
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
+
     glColor(1, 1, 1)
     glBegin(GL_QUADS)
     glTexCoord2f(0, 0)
@@ -266,6 +262,13 @@ def display():
 
     # Render the buildings (without texture, using gray color)
     glColor(0.5, 0.5, 0.5)  # Set gray color for buildings
+
+    light_position = (0.0, 0.0, 50.0, 1.0)
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position)
+
+    for semaforo in Semaforos.values():
+        semaforo.draw()
+
     for edificio in Edificios:
         edificio.draw()
 
@@ -275,16 +278,31 @@ def display():
         arbol.draw()
     for faroles in Faroles:
         faroles.draw()
-    for car_instance in Cars.values():
-        car_instance.draw()
     response = requests.get(URL_BASE + LOCATION)
     lista = response.json()
-    for agent in lista:
+
+    for Car in Cars.values():
+        Car.draw()
+
+    car_agents = lista[0]
+
+    for agent in car_agents:
         car_id = agent["id"]
+        car_color = agent.get("color")
 
         if car_id in Cars:
-            Cars[car_id].update(agent["x"]*15-190, agent["z"]
-                                * 50-260, agent.get("color"))
+            Cars[car_id].update(agent["x"]*15-190,
+                                agent["z"]*50-260, car_color)
+        elif car_color != "Orange":
+            delete_cars(car_id)
+        else:
+            add_cars(car_id, agent["x"], agent["z"], agent.get("color"))
+
+    for agent in lista[1]:
+        semaforo_id = agent["id"]
+
+        if semaforo_id in Semaforos:
+            Semaforos[semaforo_id].update(agent.get("color"))
         else:
             continue
 
@@ -298,7 +316,6 @@ def main():
     Init()
     done = False
     while not done:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
@@ -326,8 +343,7 @@ def main():
         display()
 
         pygame.display.flip()
-        pygame.time.wait(90)
-
+        pygame.time.wait(100)
     pygame.quit()
 
 

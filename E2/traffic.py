@@ -9,7 +9,6 @@ import time
 from SimpleContinuousModule import SimpleCanvas
 
 
-
 class Car(Agent):
     def __init__(self, model: Model, color, pos, speed, decision, choice):
         super().__init__(model.next_id(), model)  # Asigna un ID único automáticamente
@@ -37,7 +36,7 @@ class Circle(Agent):
         self.y = y
         self.radius = radius
         color = "Green", "Yellow", "Red"
-        self.color = color  # Inicialmente azul
+        self.color = color
 
     def change_color(self):
         # Cambia el color del círculo
@@ -126,37 +125,35 @@ class Street(Model):
         for px, py in zip(posiciones_iniciales_x, posiciones_iniciales_y):
             if cont <= 3:
                 car = Car(self, "Purple", np.array([px, py]), np.array(
-                    [-1.0, 0.0]), random.choice([1, 2,3, 4]), 1)
+                    [-1.0, 0.0]), random.choice([1, 2, 3, 4]), 1)
             else:
                 car = Car(self, "Purple", np.array([px, py]), np.array(
-                    [-1.0, 0.0]), random.choice([1, 2,3, 4]), 0)
+                    [-1.0, 0.0]), random.choice([1, 2, 3, 4]), 0)
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
             cont += 1
-         # First horizontal line (moving left)
         cont = 0
         for px, py in zip(posiciones_iniciales_x, posiciones_iniciales_y):
             if cont <= 3:
                 car = Car(self, "Gray", np.array([px, 3]), np.array(
-                    [-1.0, 0.0]), random.choice([1, 2,3, 4]), 1)
+                    [-1.0, 0.0]), random.choice([1, 2, 3, 4]), 1)
 
             else:
                 car = Car(self, "Gray", np.array([px, 3]), np.array(
-                    [-1.0, 0.0]), random.choice([1, 2,3, 4]), 0)
+                    [-1.0, 0.0]), random.choice([1, 2, 3, 4]), 0)
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
             cont += 1
 
         cont = 0
-        # Second horizontal line (moving right)
         for px, py in zip(posiciones_iniciales_x, posiciones_iniciales_y):
             if cont <= 3:
                 car = Car(self, "Blue", np.array([px, 6]), np.array(
-                    [1.0, 0.0]), random.choice([1, 2,3, 4]), 1)  # Change to move right
+                    [1.0, 0.0]), random.choice([1, 2, 3, 4]), 1)
 
             else:
                 car = Car(self, "Blue", np.array([px, 6]), np.array(
-                    [1.0, 0.0]), random.choice([1, 2,3, 4]), 0)  # Change to move right
+                    [1.0, 0.0]), random.choice([1, 2, 3, 4]), 0)
 
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
@@ -165,21 +162,16 @@ class Street(Model):
         for px, py in zip(posiciones_iniciales_x, posiciones_iniciales_y):
             if cont <= 3:
                 car = Car(self, "Black", np.array([px, 5.5]), np.array(
-                    [1.0, 0.0]), random.choice([1, 2,3, 4]), 1)  # Change to move right
+                    [1.0, 0.0]), random.choice([1, 2, 3, 4]), 1)
             else:
                 car = Car(self, "Black", np.array([px, 5.5]), np.array(
-                    [1.0, 0.0]), random.choice([1, 2,3, 4]), 0)  # Change to move right
+                    [1.0, 0.0]), random.choice([1, 2, 3, 4]), 0)
             self.space.place_agent(car, car.pos)
             self.schedule.add(car)
             cont += 1
         cont = 0
-        # Vertical line (moving upwards and then to the left)
-        # Generar 4 posiciones iniciales aleatorias con la distancia de separación deseada
-        # posiciones_iniciales_x2 = np.random.choice(
-        #     np.arange(0, 11, distancia_separacion2), 3, replace=False)
-        # Todas las posiciones iniciales en x serán 2.5
+
         posiciones_iniciales_y2 = np.full(3, -1.5)
-        # Corrected: Pass a single y-coordinate instead of a list
         for py in [-1, -1.5, -2]:
             if cont <= 2:
                 car = Car(self, "Orange", np.array(
@@ -206,28 +198,27 @@ class Street(Model):
 
         self.last_color_change_steps = [0] * len(self.circles)
         self.color_change_steps = [[24, 8, 32], [24, 8, 32], [
-            24, 8, 32]]  # Change intervals for each circle
+            24, 8, 32]]
 
         for circle in self.circles:
             self.space.place_agent(circle, (circle.x, circle.y))
 
-    def reutilizar(self,agent,agentlist):
-        if agent.pos[0] <= 5 and len(agentlist)>3:
+    def reutilizar(self, agent, agentlist):
+        if agent.pos[0] <= 5 and len(agentlist) > 3:
             agent.color = "Orange"
             agent.pos[0] = 15
             agent.pos[1] = -1
             self.space.place_agent(agent, agent.pos)
-    
-    def reutilizar1(self,agent,agentlist):
-        if agent.pos[0]>=20 and len(agentlist)>3:
+
+    def reutilizar1(self, agent, agentlist):
+        if agent.pos[0] >= 20 and len(agentlist) > 3:
             agent.color = "Orange"
             agent.pos[0] = 15
             agent.pos[1] = -1
             self.space.place_agent(agent, agent.pos)
-                
 
     def step(self):
-        self.step_count += 1  # Increment step count in each iteration
+        self.step_count += 1
         semaforo1 = self.circles[0].color
         semaforo2 = self.circles[1].color
         semaforo3 = self.circles[2].color
@@ -251,7 +242,7 @@ class Street(Model):
             if agent.choice == 1:
                 if agent.color == "Purple" or agent.color == "Gray":
                     purple_agents = [other_agent for other_agent in self.schedule.agents if
-                                    other_agent.color == "Purple" and other_agent != agent]
+                                     other_agent.color == "Purple" and other_agent != agent]
 
                     gray_agents2 = [other_agent for other_agent in self.schedule.agents if
                                     other_agent.color == "Gray" and other_agent != agent]
@@ -282,13 +273,13 @@ class Street(Model):
                                 maintain_distance_x2(
                                     agent, gray_agents2, desired_distance, current_position)
                     if agent.color == "Purple":
-                        self.reutilizar(agent,purple_agents)
+                        self.reutilizar(agent, purple_agents)
                     else:
-                        self.reutilizar(agent,gray_agents2)
+                        self.reutilizar(agent, gray_agents2)
                 elif agent.color == "Blue" or agent.color == "Black":
                     # Obtener todos los agentes azules
                     blue_agents = [other_agent for other_agent in self.schedule.agents if
-                                other_agent.color == "Blue" and other_agent != agent]
+                                   other_agent.color == "Blue" and other_agent != agent]
 
                     blue_agents2 = [other_agent for other_agent in self.schedule.agents if
                                     other_agent.color == "Black" and other_agent != agent]
@@ -319,12 +310,12 @@ class Street(Model):
                                 maintain_distance_x(
                                     agent, blue_agents2, desired_distance, current_position)
                     if agent.color == "Blue":
-                        self.reutilizar1(agent,blue_agents)
+                        self.reutilizar1(agent, blue_agents)
                     else:
-                        self.reutilizar1(agent,blue_agents2)
+                        self.reutilizar1(agent, blue_agents2)
                 elif agent.color == "Orange":
                     orange_agents = [other_agent for other_agent in self.schedule.agents if
-                                    other_agent.color == "Orange" and other_agent != agent]
+                                     other_agent.color == "Orange" and other_agent != agent]
 
                     # Coordenadas relevantes
                     current_position = agent.pos[1]
@@ -345,7 +336,8 @@ class Street(Model):
                         # Calcular la velocidad para mantener la distancia
                         for orange_agent in orange_agents:
                             if orange_agent.pos[1] < current_position:
-                                distance = current_position - orange_agent.pos[1]
+                                distance = current_position - \
+                                    orange_agent.pos[1]
                                 if distance < desired_distance:
                                     agent.speed = np.array([0.0, 0.0])
                                     break
@@ -358,34 +350,36 @@ class Street(Model):
                                 agent.speed = np.array([0.0, -1.0])
                                 if agent.decision == 1:
                                     # Verificar la posición
-                                    if agent.pos[0] >= 14 and agent.pos[0] <=17 and agent.pos[1] <= 6.5 and agent.pos[1] >= 6:
+                                    if agent.pos[0] >= 14 and agent.pos[0] <= 17 and agent.pos[1] <= 6.5 and agent.pos[1] >= 6:
                                         # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
                                         agent.speed = np.array([2.0, 0.0])
-                                        self.space.place_agent(agent, [15,6])
+                                        self.space.place_agent(agent, [15, 6])
                                         agent.color = "Blue"
-                                        
+
                                 elif agent.decision == 2:
                                     # Verificar la posición
-                                    if agent.pos[0] >= 14 and agent.pos[0] <=17 and agent.pos[1] <= 5.5 and agent.pos[1] >= 5 :
+                                    if agent.pos[0] >= 14 and agent.pos[0] <= 17 and agent.pos[1] <= 5.5 and agent.pos[1] >= 5:
                                         # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
                                         agent.speed = np.array([2.0, 0.0])
-                                        self.space.place_agent(agent, [15,5.5])
+                                        self.space.place_agent(
+                                            agent, [15, 5.5])
                                         agent.color = "Black"
 
                                 elif agent.decision == 3:
                                     # Verificar la posición
-                                    if agent.pos[0] >= 14 and agent.pos[0] <=17 and agent.pos[1] <= 3.5 and agent.pos[1] >= 3:
+                                    if agent.pos[0] >= 14 and agent.pos[0] <= 17 and agent.pos[1] <= 3.5 and agent.pos[1] >= 3:
                                         # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
                                         agent.speed = np.array([-2.0, 0.0])
-                                        self.space.place_agent(agent, [15,3])
+                                        self.space.place_agent(agent, [15, 3])
                                         agent.color = "Gray"
 
                                 elif agent.decision == 4:
                                     # Verificar la posición
-                                    if agent.pos[0] >= 14 and agent.pos[0] <=17 and agent.pos[1] <= 2.5 and agent.pos[1] >= 2:
+                                    if agent.pos[0] >= 14 and agent.pos[0] <= 17 and agent.pos[1] <= 2.5 and agent.pos[1] >= 2:
                                         # Girar 90 grados a la derecha y comenzar a moverse hacia la derecha
                                         agent.speed = np.array([-2.0, 0.0])
-                                        self.space.place_agent(agent, [15,2.5])
+                                        self.space.place_agent(
+                                            agent, [15, 2.5])
                                         agent.color = "Purple"
 
                 agent.step()
@@ -404,3 +398,8 @@ def setup_model():
     model = Street()
     model.step_count = 0  # Reset step count
     return model
+
+
+# server.setup_model = setup_model
+# server.port = 5110
+# server.launch()

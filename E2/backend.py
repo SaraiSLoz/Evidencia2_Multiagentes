@@ -59,7 +59,8 @@ def queryState(id):
         agente_info = {
             "id": agent.unique_id,
             "x": int(agent.pos[0]),
-            "z": int(agent.pos[1])
+            "z": int(agent.pos[1]),
+            "color": agent.color
         }
 
         if hasattr(agent, 'speed'):

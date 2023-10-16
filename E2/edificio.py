@@ -6,21 +6,22 @@ import random
 import math
 from objloader import OBJ
 
+
 class Edificio:
-    def __init__(self, obj_filename,x,y,z):
+    def __init__(self, obj_filename, x, y, z):
         self.obj = OBJ(obj_filename, swapyz=True)
-        self.Position = [x,y,z]
+        self.Position = [x, y, z]
 
     def draw(self):
         glPushMatrix()
 
         # Aplica la rotación alrededor del eje Y
         glTranslatef(self.Position[0], self.Position[1], self.Position[2])
-        glRotatef(0, 0, 1, 0)  # Rota alrededor del eje Y    math.degrees(angle)
+        # Rota alrededor del eje Y    math.degrees(angle)
+        glRotatef(0, 0, 1, 0)
         glScaled(5, 5, 5)  # Escala el carro (ajusta según sea necesario)
 
         # Renderiza el objeto .obj del carro
         self.obj.render()
 
         glPopMatrix()
-

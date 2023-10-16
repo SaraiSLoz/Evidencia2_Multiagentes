@@ -1,0 +1,5 @@
+####
+post http://127.0.0.1:5100/games
+
+####
+get http://127.0.0.1:5100/games/fdc6c176-b235-4ce0-9ee2-ddba14955161

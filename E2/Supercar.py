@@ -6,31 +6,35 @@ import random
 import math
 from objloader import OBJ
 
-class Car:
-    def __init__(self, obj_filename, posx,posz, vel):
-        self.obj = OBJ(obj_filename, swapyz=True)
-        self.Position = [posx, 20, posz]
 
-    def update(self,x,z):
-        new_pos = [x,20,z]
+class Car:
+    def __init__(self, obj_filename, posx, posz, vel, color):
+        self.obj = OBJ(obj_filename, swapyz=True)
+        self.Position = [posx, 5, posz]
+        self.color = color
+
+    def update(self, x, z, color):
+        new_pos = [x, 5, z]
         self.Position = new_pos
+        self.color = color
 
     def draw(self):
         glPushMatrix()
-
-        # Calcula el ángulo de rotación en radianes basado en la dirección de movimiento
-
-
         # Aplica la rotación alrededor del eje Y
         glTranslatef(self.Position[0], self.Position[1], self.Position[2])
-        glRotatef(0, 0, 1, 0)  # Rota alrededor del eje Y    math.degrees(angle)
-        glScaled(7, 7, 7)  # Escala el carro (ajusta según sea necesario)
+        # glRotatef(0, 0, 1, 0)  # Rota alrededor del eje Y    math.degrees(angle)
+        glScaled(5, 5, 5)  # Escala el carro (ajusta según sea necesario)
+
+        if self.color == "Blue" or self.color == "Black":
+            glRotatef(-90.0, 0, 1, 0)  # Girar 90 grados hacia la izquierda
+
+        elif self.color == "Purple" or self.color == "Gray":
+            glRotatef(90.0, 0, 1, 0)
 
         # Renderiza el objeto .obj del carro
         self.obj.render()
 
         glPopMatrix()
-
 
     def normalize(self, v):
         length = math.sqrt(v[0] ** 2 + v[2] ** 2)

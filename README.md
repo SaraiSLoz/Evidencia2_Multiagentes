@@ -2,7 +2,7 @@
 
 La carpeta E2 contiene todos los archivos necesarios para la simulación. 
 
-Proceso de Instalación y Ejecución
+---Proceso de Instalación y Ejecución---
 
 Instalar e importar la librería numpy, flask, uuid, mesa para el uso de la parte de mesa.
 Instalar e importar las librerias pygame, requests, openGL, PyOpenGL PyOpenGL_accelerate

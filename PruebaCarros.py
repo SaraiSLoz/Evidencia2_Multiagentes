@@ -58,16 +58,6 @@ nfaroles = 3
 textures = []
 
 
-# def add_cars(id_car, x, y, color):
-#     car = Car("Car.obj", x, y, 1.0, color)
-#     Cars[id_car] = car
-
-
-# def delete_cars(car_id):
-#     if car_id in Cars:
-#         del Cars[car_id]
-
-
 def Init():
     screen = pygame.display.set_mode(
         (screen_width, screen_height), DOUBLEBUF | OPENGL)
